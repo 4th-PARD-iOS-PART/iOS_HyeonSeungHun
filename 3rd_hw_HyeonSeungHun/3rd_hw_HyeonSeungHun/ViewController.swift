@@ -29,15 +29,15 @@ class ViewController: UITabBarController {
         self.tabBar.backgroundColor = .darkGray
         
         guard let tabBarItems = self.tabBar.items else {return}
-        tabBarItems[0].image = UIImage(systemName: "apple.logo")
+        tabBarItems[0].image = UIImage(named: "home")
         tabBarItems[0].title = "Home"
-        tabBarItems[1].image = UIImage(systemName: "apple.logo")
+        tabBarItems[1].image = UIImage(named: "search")
         tabBarItems[1].title = "Search"
-        tabBarItems[2].image = UIImage(systemName: "apple.logo")
+        tabBarItems[2].image = UIImage(named: "video")
         tabBarItems[2].title = "Coming Soon"
-        tabBarItems[3].image = UIImage(systemName: "apple.logo")
+        tabBarItems[3].image = UIImage(named: "download")
         tabBarItems[3].title = "Download"
-        tabBarItems[4].image = UIImage(systemName: "apple.logo")
+        tabBarItems[4].image = UIImage(named: "more")
         tabBarItems[4].title = "More"
         
     }

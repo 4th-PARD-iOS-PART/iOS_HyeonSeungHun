@@ -2,10 +2,9 @@ import UIKit
 
 class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
-    var tableView: UITableView!
+   // var tableView: UITableView!
     var headerImageView: UIImageView! // 상단 이미지
     var movies: [String] = [] // 영화 리스트
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
@@ -14,6 +13,16 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         setupMovies() // 영화 목록 설정
         setupUI()
     }
+    
+    let tableView : UITableView = {
+        var tableView = UITableView()
+        tableView = UITableView(frame: .zero, style: .grouped)
+        tableView.backgroundColor = .black
+        tableView.register(SectionTableViewCell.self, forCellReuseIdentifier: "sectionCell")
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
+    }()
+    
 
     // 영화 목록 설정 함수
     func setupMovies() {
@@ -24,61 +33,46 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
     }
 
     func setupUI() {
-        let myScrollView = UIScrollView()
-        myScrollView.translatesAutoresizingMaskIntoConstraints=false
-        view.addSubview(myScrollView)
         
-        let contentView = UIView()
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.backgroundColor = .blue
-        myScrollView.addSubview(contentView)
+        
+        view.addSubview(tableView)
+        tableView.delegate = self
+        tableView.dataSource = self
+        //헤더뷰 연결
+        let headerView = FirstHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 450))
+        tableView.tableHeaderView = headerView
+        
         
         //만약에 navigation bar가 아니라면??
         // 그러면 그냥 고정으로 해놓고 아래로 scroll해도 움직이지는 않을 것 같은데
         // 상단에 헤더 이미지 추가
         // 그리고 상단에 netflix아이콘하고 다른것도 넣어야함(상단=navigation bar? or 그냥 )
-        headerImageView = UIImageView(image: UIImage(named: "movie3"))
-        headerImageView.contentMode = .scaleAspectFill
-        headerImageView.clipsToBounds = true
-        headerImageView.translatesAutoresizingMaskIntoConstraints = false
-        myScrollView.addSubview(headerImageView)
+//        headerImageView = UIImageView(image: UIImage(named: "movie3"))
+//        headerImageView.contentMode = .scaleAspectFill
+//        headerImageView.clipsToBounds = true
+//        headerImageView.translatesAutoresizingMaskIntoConstraints = false
+//        view.addSubview(headerImageView)
         
         // 헤드와 tableview사이에 버튼넣기
         
         
         // 테이블 뷰 설정+스크롤했을때 title고정이 안되게 해놓아야함
-        tableView = UITableView(frame: .zero, style: .grouped)
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.backgroundColor = .black
-        tableView.register(SectionTableViewCell.self, forCellReuseIdentifier: "sectionCell")
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        myScrollView.addSubview(tableView)
-
+        
         // 오토 레이아웃 설정
         NSLayoutConstraint.activate([
-            myScrollView.topAnchor.constraint(equalTo: view.topAnchor),
-            myScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            myScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            myScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             // 상단 이미지의 제약 조건
-            headerImageView.topAnchor.constraint(equalTo: myScrollView.topAnchor),
-            headerImageView.leadingAnchor.constraint(equalTo: myScrollView.leadingAnchor),
-            headerImageView.trailingAnchor.constraint(equalTo: myScrollView.trailingAnchor),
-            headerImageView.heightAnchor.constraint(equalToConstant: 200),
+//            headerImageView.topAnchor.constraint(equalTo: view.topAnchor),
+//            headerImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+//            headerImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+//            headerImageView.heightAnchor.constraint(equalToConstant: 200),
             
             // 테이블 뷰의 제약 조건
-            tableView.topAnchor.constraint(equalTo: headerImageView.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: myScrollView.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: myScrollView.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: myScrollView.bottomAnchor),
-            
-            contentView.topAnchor.constraint(equalTo: myScrollView.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: myScrollView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: myScrollView.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: myScrollView.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: myScrollView.widthAnchor)
-            
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+          
         ])
     }
 
@@ -106,6 +100,7 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
     // 섹션 헤더 (선택 사항)
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        
         switch section {
         case 0: return "Popular on Netflix"
         case 1: return "Trending Now"
@@ -113,9 +108,23 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         case 3: return "My List"
         case 4: return "African Movies"
         default: return nil
+            
+            
+        }
+    }
+    func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+        if let header = view as? UITableViewHeaderFooterView {
+            // Customize the text color and font size
+            header.textLabel?.textColor = UIColor.white // Change this to your preferred color
+            header.textLabel?.font = UIFont.boldSystemFont(ofSize: 24) // Change font size and style here
+            
+            // Optionally change background color
+            header.contentView.backgroundColor = UIColor.black // Change to your preferred background color
         }
     }
 
+    
+    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 220 // 각 섹션의 높이 조정
     }
