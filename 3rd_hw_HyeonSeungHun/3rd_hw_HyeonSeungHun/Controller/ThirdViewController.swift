@@ -30,4 +30,3 @@ class ThirdViewController: UIViewController{
         ])
     }
 }
-
