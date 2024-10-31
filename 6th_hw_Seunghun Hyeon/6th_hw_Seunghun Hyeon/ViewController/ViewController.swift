@@ -4,6 +4,7 @@ import UIKit
 // 이 데이터를 테이블 뷰에 표시하고 수정할 수 있습니다.
 class ViewController: UIViewController {
     var members: [Member] = []  // 테이블 뷰에 표시할 멤버 정보 리스트
+    let baseURL = "http://ec2-13-209-3-68.ap-northeast-2.compute.amazonaws.com:8080"
     var selectedIndex: Int?     // 선택된 셀의 인덱스
     
     // 테이블 뷰: 멤버 리스트를 보여주는 UI 요소
@@ -46,6 +47,8 @@ class ViewController: UIViewController {
         tableView.dataSource = self  // 테이블 뷰의 데이터 소스 연결
         tableView.delegate = self    // 테이블 뷰의 델리게이트 연결
         addButton.addTarget(self, action: #selector(addMember), for: .touchUpInside)
+        tableView.register(TableViewCell.self, forCellReuseIdentifier: "TableViewCell")
+
     }
     
     // UI 요소들의 레이아웃(위치) 설정
@@ -71,7 +74,7 @@ class ViewController: UIViewController {
     @objc func addMember() {
         let modalVC = ModalViewController()
         modalVC.onSave = { [weak self] name, age, part in
-            let member = Member(name: name, age: age, part: part)
+            let member = Member(name: name, part: part, age: age )
             self?.members.append(member)
             self?.tableView.reloadData()
         }
@@ -123,7 +126,7 @@ class ViewController: UIViewController {
             }
             
             // 새 Member 객체 생성 및 배열에 추가
-            let member = Member(name: name, age: age, part: part)
+            let member = Member(name: name, part: part, age: age)
             self.members[index].name = name
             self.members[index].age = age
             self.members[index].part = part
@@ -138,23 +141,67 @@ class ViewController: UIViewController {
 }
 
 // 테이블 뷰에 필요한 데이터와 이벤트 처리
-extension ViewController: UITableViewDataSource, UITableViewDelegate {
+extension ViewController : UITableViewDelegate, UITableViewDataSource {
     
-    // 테이블 뷰의 셀 개수 설정
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return members.count
     }
     
-    // 각 셀에 표시할 데이터 설정
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        let member = members[indexPath.row]
-        cell.textLabel?.text = "[ \(member.part) ] \(member.name)"  // 셀에 멤버의 파트와 이름 표시
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "TableViewCell" , for : indexPath) as? TableViewCell else { return UITableViewCell() }
+
+        let memberCell = members[indexPath.row]
+        cell.partLabel.text = memberCell.part
+        cell.nameLabel.text = memberCell.name
+    
         return cell
     }
     
-    // 셀이 선택되었을 때 호출되는 메서드
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        selectedIndex = indexPath.row  // 선택된 셀의 인덱스 저장
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 70
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = DetailViewController()
+        let passData = members[indexPath.row]
+        
+        vc.name = passData.name
+        vc.part = passData.part
+        vc.age = passData.age
+    
+        self.present(vc,animated: true)
+    }
+    
 }
+
+
+//MARK: - API 코드
+extension ViewController {
+    
+    func getData() {
+        guard let url = URL(string: "\(baseURL)/user?part=all") else {
+            print("🚨 url error")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error : \(error.localizedDescription)")
+                return
+            }
+            
+            if let data = data {
+                do{
+                    let user = try JSONDecoder().decode([Member].self , from: data)
+                    
+                    self.members = user
+                    DispatchQueue.main.async {
+                        self.tableView.reloadData()
+                    }
+                } catch {
+                    print("Decoding error: \(error)")
+                }
+            }
+        }.resume()
+    }
+    }

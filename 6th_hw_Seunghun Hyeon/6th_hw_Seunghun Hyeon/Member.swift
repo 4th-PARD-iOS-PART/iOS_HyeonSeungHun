@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct Member {
+struct Member : Codable {
+    var id : Int?
     var name : String
-    var age : Int
     var part : String
-    
+    var age : Int
 }

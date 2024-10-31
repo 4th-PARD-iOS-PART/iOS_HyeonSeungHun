@@ -1,10 +1,3 @@
-//
-//  ModalViewController.swift
-//  6th_hw_Seunghun Hyeon
-//
-//  Created by 현승훈 on 10/31/24.
-//
-
 import UIKit
 
 class ModalViewController: UIViewController {
@@ -82,7 +75,55 @@ class ModalViewController: UIViewController {
             return
         }
         
-        onSave?(name, age, part)  // 콜백 호출하여 데이터 전달
-        dismiss(animated: true)
+        let user = Member(name: name, part: part, age: age)
+        
+        // API 호출
+        postData(member: user) { [weak self] success in
+            DispatchQueue.main.async {
+                if success {
+                    print("데이터 전송 성공")
+                    self?.onSave?(name, age, part)  // 콜백 호출하여 데이터 전달
+                    self?.dismiss(animated: true)
+                } else {
+                    print("데이터 전송 실패")
+                }
+            }
+        }
+    }
+    
+    // 데이터를 서버에 POST 요청으로 전송하는 함수
+    private func postData(member: Member, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "http://ec2-13-209-3-68.ap-northeast-2.compute.amazonaws.com:8080/user") else {
+            print("유효하지 않은 URL")
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            let jsonData = try JSONEncoder().encode(member)
+            request.httpBody = jsonData
+            
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("에러 발생: \(error.localizedDescription)")
+                    completion(false)
+                    return
+                }
+                
+                if let response = response as? HTTPURLResponse, response.statusCode == 200 {
+                    completion(true)  // 성공
+                } else {
+                    completion(false) // 실패
+                }
+            }
+            task.resume()
+        } catch {
+            print("JSON 인코딩 에러: \(error)")
+            completion(false)
+        }
     }
 }
